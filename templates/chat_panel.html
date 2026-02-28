@@ -1,0 +1,84 @@
+<!-- Partial fragment: the right-hand chat panel.
+     Rendered standalone for HTMX swaps into #chat-panel — no <html>/<body> wrapper. -->
+<div class="chat"
+     x-data='{
+       sending: false,
+       inputText: "",
+       conversationId: "{{ conversation_id }}",
+       scrollToBottom() {
+         const el = document.getElementById("messages-list");
+         if (el) el.scrollTop = el.scrollHeight;
+       }
+     }'
+     x-init="scrollToBottom()">
+
+  <!-- ── Header ─────────────────────────────────────── -->
+  <div class="chat__header">
+    {% if has_conversation %}
+      <h2 class="chat__title">{{ conversation_title }}</h2>
+      <span class="chat__model">llama3.2 · Ollama</span>
+    {% else %}
+      <h2 class="chat__title chat__title--placeholder">Select or start a conversation</h2>
+    {% endif %}
+  </div>
+
+  <!-- ── Message list ───────────────────────────────── -->
+  <div class="chat__messages" id="messages-list" x-ref="messagesList">
+    {% if !has_conversation %}
+      <div class="chat__empty">
+        <p>👋 Hello! Click "＋ New conversation" in the sidebar to get started.</p>
+      </div>
+    {% else %}
+      {% for msg in messages %}
+        {% include "message.html" %}
+      {% endfor %}
+    {% endif %}
+
+    <!-- Typing indicator — shown while HTMX request is in-flight -->
+    <div class="message message--assistant message--typing"
+         id="typing-indicator"
+         style="display:none"
+         x-show="sending"
+         x-transition>
+      <div class="message__bubble">
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Input area ─────────────────────────────────── -->
+  <form class="chat__input-area"
+        hx-post="/api/chat"
+        hx-target="#messages-list"
+        hx-swap="beforeend scroll:#messages-list:bottom"
+        hx-indicator="#global-spinner"
+        hx-on::before-request="sending = true; $el.querySelector('textarea').value = ''"
+        hx-on::after-request="sending = false; scrollToBottom()">
+
+    <!-- Hidden field carries the active conversationId to the server -->
+    <input type="hidden" name="conversationId" x-bind:value="conversationId"
+           hx-on::after-request="
+             const id = event.detail.xhr.getResponseHeader('X-Conversation-Id');
+             if (id) conversationId = id;
+           " />
+
+    <textarea class="chat__textarea"
+              name="message"
+              rows="1"
+              placeholder="Type a message… (Enter to send, Shift+Enter for newline)"
+              x-model="inputText"
+              :disabled="sending"
+              @keydown.enter.prevent.exact="if (!sending && inputText.trim()) $el.closest('form').requestSubmit()"
+              @keydown.enter.shift.exact="inputText += '\n'"></textarea>
+
+    <button type="submit"
+            class="chat__send-btn"
+            :class="{ 'chat__send-btn--disabled': sending || !inputText.trim() }"
+            :disabled="sending || !inputText.trim()">
+      Send
+    </button>
+  </form>
+
+</div>

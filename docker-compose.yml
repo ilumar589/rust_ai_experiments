@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: kai-postgres
+    environment:
+      POSTGRES_DB: kaiexperiments
+      POSTGRES_USER: kai
+      POSTGRES_PASSWORD: kaipassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kai -d kaiexperiments"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: kai-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # GPU support (uncomment if NVIDIA GPU available):
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  # One-shot init service: pulls the default model then exits
+  ollama-pull:
+    image: ollama/ollama:latest
+    container_name: kai-ollama-pull
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: "no"
+    entrypoint: ["ollama", "pull", "llama3.2"]
+    environment:
+      OLLAMA_HOST: "ollama:11434"
+
+volumes:
+  postgres_data:
+  ollama_data:
