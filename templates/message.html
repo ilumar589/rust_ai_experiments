@@ -1,0 +1,11 @@
+{% if msg.role == "USER" %}
+<div class="message message--user">
+  <div class="message__bubble"><p>{{ msg.content }}</p></div>
+  <span class="message__meta">You</span>
+</div>
+{% else %}
+<div class="message message--assistant" id="message-{{ msg.id }}">
+  <div class="message__bubble"><p>{{ msg.content }}</p></div>
+  <span class="message__meta">Ollama · llama3.2</span>
+</div>
+{% endif %}
