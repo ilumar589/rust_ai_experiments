@@ -84,3 +84,43 @@ pub struct ChatResponse {
     pub conversation_id: String,
     pub message: Message,
 }
+
+// ── WebSocket message types ──────────────────────────────────────────────────
+
+/// Incoming WebSocket message from the client.
+#[derive(Debug, Deserialize)]
+pub struct WsChatRequest {
+    pub conversation_id: Option<String>,
+    pub message: String,
+}
+
+/// Outgoing WebSocket events sent to the client.
+#[derive(Debug, Clone, Serialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum WsEvent {
+    /// Stream is starting — includes the (possibly new) conversation id.
+    StreamStart {
+        conversation_id: String,
+    },
+    /// A single content chunk from the LLM.
+    StreamChunk {
+        content: String,
+    },
+    /// Stream finished — full message has been persisted.
+    StreamEnd {
+        message_id: String,
+        full_content: String,
+    },
+    /// Something went wrong.
+    Error {
+        message: String,
+    },
+}
+
+/// Context prepared by ChatService before streaming begins.
+#[derive(Debug)]
+pub struct ChatContext {
+    pub conversation_id: String,
+    pub history: Vec<Message>,
+    pub user_message: String,
+}

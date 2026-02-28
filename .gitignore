@@ -1,3 +1,13 @@
+# Build output (backend + frontend)
 /target
+/frontend/target
+/frontend/dist
+
+# Environment
 .env
+
+# Debug symbols
 *.pdb
+
+# Cargo lock for the frontend (library/wasm crate)
+/frontend/Cargo.lock
