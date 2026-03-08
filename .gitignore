@@ -9,5 +9,6 @@
 # Debug symbols
 *.pdb
 
-# Cargo lock for the frontend (library/wasm crate)
-/frontend/Cargo.lock
+# Cargo lock
+Cargo.lock
+frontend/Cargo.lock

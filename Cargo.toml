@@ -10,6 +10,24 @@ edition = "2021"
 name = "rust_ai_experiments"
 path = "src/main.rs"
 
+# Enable a small amount of optimization in the dev profile.
+[profile.dev]
+opt-level = 1
+
+# Enable a large amount of optimization in the dev profile for dependencies.
+[profile.dev.package."*"]
+opt-level = 3
+
+# Enable more optimization in the release profile at the cost of compile time.
+[profile.release]
+# Compile the entire crate as one unit.
+# Slows compile times, marginal improvements.
+codegen-units = 1
+# Do a second optimization pass over the entire program, including dependencies.
+# Slows compile times, marginal improvements.
+lto = "thin"
+
+
 [dependencies]
 axum = { version = "0.8.8", features = ["ws"] }
 tokio = { version = "1", features = ["full"] }
@@ -22,8 +40,8 @@ sqlx = { version = "0.8", features = [
     "chrono",
     "migrate",
 ] }
-rig-core = "0.31.0"
-uuid = { version = "1", features = ["v4"] }
+rig-core = "0.32.0"
+uuid = { version = "1.22.0", features = ["v4"] }
 chrono = { version = "0.4", features = ["serde"] }
 thiserror = "2"
 tracing = "0.1"
